@@ -76,14 +76,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
 
 // Get recent logins (limited to 3)
 $recent_logins = [];
-$login_query = "SELECT id, username FROM users ORDER BY last_login DESC LIMIT 3";
-// $login_result = $conn->query($login_query);
+$login_query = "SELECT * FROM users ORDER BY last_login DESC LIMIT 3";
+$login_result = $conn->query($login_query);
 
-/*if ($login_result && $login_result->num_rows > 0) {
+if ($login_result && $login_result->num_rows > 0) {
     while ($row = $login_result->fetch_assoc()) {
         $recent_logins[] = $row;
     }
-}*/
+}
 
 // Handle language selection
 $languages = ['English (US)', 'Filipino', 'Hiligaynon'];
@@ -208,7 +208,7 @@ $conn->close();
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+    
         .form-input {
             width: 100%;
             padding: 12px;
@@ -313,7 +313,7 @@ $conn->close();
                 <h2>Recent Logins</h2>
                 <div class="login-profiles">
                     <?php foreach ($recent_logins as $login): ?>
-                    <div class="profile-item" onclick="fillEmail('<?php echo htmlspecialchars($login['username']); ?>')">
+                    <div class="profile-item" onclick="fillEmail('<?php echo htmlspecialchars($login['email']); ?>')">
                         <div class="profile-box"></div>
                         <div class="profile-name"><?php echo htmlspecialchars($login['username']); ?></div>
                     </div>
@@ -355,7 +355,7 @@ $conn->close();
         function fillEmail(username) {
             // This is a simple implementation
             // In a real application, you might want to use the actual email instead
-            document.querySelector('input[name="email"]').value = username.toLowerCase().replace(' ', '') + "@example.com";
+            document.querySelector('input[name="email"]').value = username.toLowerCase().replace(' ', '');
             document.querySelector('input[name="password"]').focus();
         }
         

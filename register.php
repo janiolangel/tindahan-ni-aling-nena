@@ -91,12 +91,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // If no errors, proceed with registration
     if (empty($errors)) {
-        // Hash password
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        
         // Prepare and bind
         $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $username, $email, $hashed_password);
+        $stmt->bind_param("sss", $username, $email, $password);
         
         // Execute the query
         if ($stmt->execute()) {

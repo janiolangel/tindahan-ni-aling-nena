@@ -1,7 +1,5 @@
 <?php
-// Start session for user authentication
 session_start();
-
 // Database connection configuration
 $db_host = "localhost";
 $db_user = "root";
@@ -9,7 +7,7 @@ $db_pass = "";
 $db_name = "tindahan_system";
 
 // Mock user data (in a real app, this would come from database)
-$current_user = "Aling Nena";
+$current_user = $_SESSION['username'];
 $current_date = date("F j, Y");
 $stores = [
     [
