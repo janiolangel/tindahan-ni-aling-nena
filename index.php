@@ -79,7 +79,7 @@ $recent_logins = [];
 $login_query = "SELECT id, username FROM users ORDER BY last_login DESC LIMIT 3";
 // $login_result = $conn->query($login_query);
 
-/* if ($login_result && $login_result->num_rows > 0) {
+/*if ($login_result && $login_result->num_rows > 0) {
     while ($row = $login_result->fetch_assoc()) {
         $recent_logins[] = $row;
     }
@@ -357,6 +357,11 @@ $conn->close();
             // In a real application, you might want to use the actual email instead
             document.querySelector('input[name="email"]').value = username.toLowerCase().replace(' ', '') + "@example.com";
             document.querySelector('input[name="password"]').focus();
+        }
+        
+        // Option for direct login button to dashboard (for testing)
+        function directToDashboard() {
+            window.location.href = "dashboard.php";
         }
     </script>
 </body>
