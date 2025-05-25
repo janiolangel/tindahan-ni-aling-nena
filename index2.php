@@ -32,7 +32,7 @@
 
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 0.6fr 1fr;
             max-width: 1200px;
             width: 100%;
             background: rgba(255, 255, 255, 0.95);
@@ -99,14 +99,14 @@
         }
 
         .brand-text {
-            color: rgba(255, 255, 255, 0.95);
+            color: rgba(255, 255, 255, 0.52);
             margin-top: 30px;
             margin-bottom: 20px;
             z-index: 1;
         }
 
-        .brand-text h1 {
-            font-size: 1.8rem;
+        .brand-text h3 {
+            font-size: 1.4rem;
             font-weight: 600;
             letter-spacing: 1px;
             font-family: "Poppins", sans-serif;
@@ -130,14 +130,14 @@
 
         .login-avatars {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
             gap: 16px;
             justify-content: center;
         }
 
         .avatar {
-            width: 70px;
-            height: 70px;
+            width: 300px;
+            height: 40px;
             border-radius: 16px;
             background: rgba(255, 255, 255, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -523,18 +523,21 @@
                 </div>
             </div>
             <div class="brand-text">
-                <h1>RECENT LOGINS</h1>
+                <h3>Shortcuts:</h3>
             </div>
             <div class="recent-logins">
                 <div class="login-avatars">
-                    <div class="avatar" title="Admin" onclick="fillUserEmail('admin@tindahan.com')">
-                        AD
+                    <div class="avatar" title="Admin" onclick="fillUserEmail('jcaparicio@up.edu.ph')">
+                        clyyddeeee
                     </div>
-                    <div class="avatar" title="Manager" onclick="fillUserEmail('manager@tindahan.com')">
-                        MG  
+                    <div class="avatar" title="Manager" onclick="fillUserEmail('cjhulleza@up.edu.ph')">
+                         christianjavehulleza
                     </div>
-                    <div class="avatar" title="Staff" onclick="fillUserEmail('staff@tindahan.com')">
-                        ST
+                    <div class="avatar" title="Staff" onclick="fillUserEmail('amjaniola@up.edu.ph')">
+                        janiolangel
+                    </div>
+                    <div class="avatar" title="Staff" onclick="fillUserEmail('kadomingo@up.edu.ph')">
+                        kete_ashley.23
                     </div>
                 </div>
             </div>
