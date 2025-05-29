@@ -1,0 +1,2 @@
+Problems:
+[] - Search filter also includes Delete and Edit, so remove them when filtering
