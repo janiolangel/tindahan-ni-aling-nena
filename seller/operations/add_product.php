@@ -111,7 +111,6 @@ do {
     </style>
 </head>
 <body>
-    "?stock_id=".$_GET['stock_id'];?>">
         <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']).'?store_id='. $_SESSION['store_id'];?>">
         <div >
             <label>Product Name</label>

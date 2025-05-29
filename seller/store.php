@@ -26,6 +26,13 @@ $products = $conn->query(
 )->fetch_all(MYSQLI_ASSOC);
 var_dump($products);
 
+$invoices = $conn->query(
+    "SELECT *
+    FROM invoice_item it
+    JOIN product p on p.stock_id = it.id
+    WHERE p.stock_id = ".$_SESSION['store_id'].""
+)->fetch_all(MYSQLI_ASSOC);
+
 ?>
 
 
@@ -79,6 +86,22 @@ var_dump($products);
                 <br>
             <?php endforeach;?>
             <a href="operations/add_product.php?store_id=<?php echo $_SESSION['store_id']?>" class="add-product">Add Product +</a>
+        </aside>
+    <?php elseif ($_SESSION['store_view'] == 'invoice'): ?>
+        <label>Invoice List</label>
+        <aside>
+            <?php foreach ($invoices as $invoice): ?>
+                <a class="invoice-desc" style="text-decoration: none; color: inherit;">
+                    <?php echo htmlspecialchars($invoice['name']); ?>
+                    <?php echo htmlspecialchars($invoice['status']); ?>
+                    <?php echo htmlspecialchars($invoice['quantity']); ?>
+                    <?php echo htmlspecialchars($invoice['subtotal']); ?>
+                </a>
+                <a href="operations/edit_invoice.php?stock_id=<?php echo $product['stock_id'];?>">Edit</a>
+                <a href="operations/delete_invoice.php?stock_id=<?php echo $product['stock_id'];?>">Delete</a>
+                <br>
+            <?php endforeach;?>
+            <a href="operations/add_invoice.php?store_id=<?php echo $_SESSION['store_id']?>" class="add-product">Add Invoice +</a>
         </aside>
     <?php endif;?>
     <div>

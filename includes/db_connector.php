@@ -3,7 +3,7 @@
 $db_host = "localhost";
 $db_user = "root";
 $db_pass = "";
-$db_name = "tindahan_system_1";
+$db_name = "tindahan_system";
 
 // -- connect to database
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
