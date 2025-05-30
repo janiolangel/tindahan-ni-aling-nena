@@ -50,7 +50,178 @@ do {
     <title>Tindahan ni Aling Nena - Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        input {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 0.5fr 1fr;
+            width: 95vw;
+            max-width: 870px;
+            height: 70vh;
+            max-height: 560px;
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .left-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="15" cy="15" r="0.5" fill="rgba(255,255,255,0.08)"/><circle cx="45" cy="45" r="1.5" fill="rgba(255,255,255,0.06)"/></svg>') repeat;
+            animation: float 25s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-60px) rotate(360deg); }
+        }
+
+        .logo {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 6px 18px rgba(79, 172, 254, 0.3);
+            font-family: "Poppins", sans-serif;
+        }
+
+        .logo-icon img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .login-avatars {
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 32px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(15px);
+            overflow: hidden;
+            position: relative;
+            font-family: "Poppins", sans-serif;
+        }
+
+        .avatar:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .right-section {
+            padding: 30px 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .login-header {
+            margin-bottom: 25px;
+        }
+
+        .login-header h2 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            font-family: "Poppins", sans-serif;
+        }
+
+        .login-header p {
+            color: #6B7280;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .form-group label {
             display: block;
             margin-bottom: 6px;
             color: #374151;
@@ -415,10 +586,21 @@ do {
 </head>
 
 <body>
-    <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>">
-        <?php if (isset($error_message)): ?>
-            <div><?php echo $error_message;?></div>
-        <?php endif; ?>
+    <div class="container">
+        <div class="left-section">
+            <img src="logo.png" alt="Logo">
+        </div>
+
+        <div class="right-section">
+            <div class="login-header">
+                <h2>Welcome Back!</h2>
+                <p>Sign in to access your dashboard and manage your tindahan.</p>
+            </div>
+
+            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>">
+                <?php if (isset($error_message)): ?>
+                    <div class="error-message"><?php echo $error_message;?></div>
+                <?php endif; ?>
 
                 <div class="form-group">
                     <label for="email">Email Address</label>
