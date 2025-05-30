@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 29, 2025 at 11:25 AM
+-- Generation Time: May 30, 2025 at 04:35 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -28,12 +28,40 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `invoice` (
-  `buyer` varchar(50) DEFAULT NULL,
   `id` int(11) NOT NULL,
-  `date` date NOT NULL DEFAULT current_timestamp(),
-  `paid_status` tinyint(1) NOT NULL,
-  `amount` float(10,2) NOT NULL
+  `date` date NOT NULL,
+  `status` tinyint(1) NOT NULL,
+  `buyer` varchar(50) NOT NULL,
+  `total_amount` float(10,2) NOT NULL,
+  `payment_type` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `invoice`
+--
+
+INSERT INTO `invoice` (`id`, `date`, `status`, `buyer`, `total_amount`, `payment_type`) VALUES
+(20, '2025-05-30', 1, 'Ako', 20.00, 'Cash'),
+(21, '2025-05-30', 0, 'asda', 30.00, 'GCash');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `invoiceitem_invoice`
+--
+
+CREATE TABLE `invoiceitem_invoice` (
+  `invoice_item_id` int(11) DEFAULT NULL,
+  `invoice_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `invoiceitem_invoice`
+--
+
+INSERT INTO `invoiceitem_invoice` (`invoice_item_id`, `invoice_id`) VALUES
+(27, 20),
+(28, 21);
 
 -- --------------------------------------------------------
 
@@ -42,11 +70,20 @@ CREATE TABLE `invoice` (
 --
 
 CREATE TABLE `invoice_item` (
-  `status` tinyint(1) NOT NULL,
-  `quantity` int(11) NOT NULL,
   `id` int(11) NOT NULL,
-  `subtotal` float(10,2) NOT NULL
+  `subtotal` float(10,2) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `status` tinyint(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `invoice_item`
+--
+
+INSERT INTO `invoice_item` (`id`, `subtotal`, `quantity`, `status`) VALUES
+(26, 10.00, 1, 0),
+(27, 20.00, 2, 1),
+(28, 30.00, 2, 0);
 
 -- --------------------------------------------------------
 
@@ -55,23 +92,42 @@ CREATE TABLE `invoice_item` (
 --
 
 CREATE TABLE `product` (
-  `tindahan_id` int(11) DEFAULT NULL,
-  `stock_id` int(11) DEFAULT NULL,
+  `tindahan_id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `quantity_sold` int(11) NOT NULL,
-  `unit_price` decimal(10,2) NOT NULL,
-  `invoice_item_id` int(11) DEFAULT NULL
+  `unit_price` float(10,2) NOT NULL,
+  `source` varchar(50) NOT NULL,
+  `unit` varchar(50) NOT NULL,
+  `product_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `product`
 --
 
-INSERT INTO `product` (`tindahan_id`, `stock_id`, `quantity_sold`, `unit_price`, `invoice_item_id`) VALUES
-(17, 10, 10, 13.50, NULL),
-(19, 14, 10, 15.00, NULL),
-(19, 11, 1, 1.00, NULL),
-(19, 15, 1, 10.00, NULL),
-(32, 17, 5, 10.00, NULL);
+INSERT INTO `product` (`tindahan_id`, `name`, `quantity_sold`, `unit_price`, `source`, `unit`, `product_id`) VALUES
+(36, 'Christian Jave Hulleza', 3, 15.00, '1', 'a', 2),
+(36, 'Frotus', 0, 10.00, '1', '1', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_invoiceitem`
+--
+
+CREATE TABLE `product_invoiceitem` (
+  `product_id` int(11) NOT NULL,
+  `invoice_item_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_invoiceitem`
+--
+
+INSERT INTO `product_invoiceitem` (`product_id`, `invoice_item_id`) VALUES
+(2, 26),
+(3, 27),
+(2, 28);
 
 -- --------------------------------------------------------
 
@@ -93,12 +149,8 @@ CREATE TABLE `stock` (
 --
 
 INSERT INTO `stock` (`id`, `name`, `quantity`, `price`, `unit`, `source`) VALUES
-(10, 'Stock 2', 10, 1.00, '1', '1'),
-(11, 'Jave', 100, 10.50, 'cm', 'Me'),
-(14, 'Stock 1', 100, 10.00, 'unit', 'source 2'),
-(15, 'Stock 2', 3, 1.00, '1', '1'),
-(16, 'Balls', 2, 10.00, 'sex', 'Balls Store'),
-(17, 'Jeb', 10, 10.00, 'sex', 'Balls Store');
+(23, 'Christian Jave Hulleza', 0, 1.00, 'a', '1'),
+(24, 'Frotus', 8, 5.00, '1', '1');
 
 -- --------------------------------------------------------
 
@@ -109,19 +161,36 @@ INSERT INTO `stock` (`id`, `name`, `quantity`, `price`, `unit`, `source`) VALUES
 CREATE TABLE `tindahan` (
   `name` varchar(50) NOT NULL,
   `address` varchar(100) NOT NULL,
-  `id` int(11) NOT NULL
+  `id` int(11) NOT NULL,
+  `revenue` float(10,2) DEFAULT NULL,
+  `expense` float(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tindahan`
 --
 
-INSERT INTO `tindahan` (`name`, `address`, `id`) VALUES
-('Store 1', 'Address', 17),
-('Store 3', '', 19),
-('Store 1', 'Store 3', 21),
-('Store 2', '', 28),
-('Balls Store', 'Testicles, Balls, Penis', 32);
+INSERT INTO `tindahan` (`name`, `address`, `id`, `revenue`, `expense`) VALUES
+('Christian Jave Hulleza', 'a', 36, 20.00, 17.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tindahan_invoice`
+--
+
+CREATE TABLE `tindahan_invoice` (
+  `invoice_id` int(11) DEFAULT NULL,
+  `tindahan_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tindahan_invoice`
+--
+
+INSERT INTO `tindahan_invoice` (`invoice_id`, `tindahan_id`) VALUES
+(20, 36),
+(21, 36);
 
 -- --------------------------------------------------------
 
@@ -140,13 +209,7 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`email`, `password`, `username`) VALUES
-('a@email.com', 'password', 'Username'),
-('a@up.edu.ph', 'hulleza04', 'A'),
-('cshulleza@up.edu.ph', 'hulleza', 'Hello'),
-('hello@gmail.com', 'hello1', 'Christian Jave'),
-('jave@up.edu.ph', 'hulleza', 'Christian Jave'),
-('test1@mail.com', 'password', 'User_Testicle1'),
-('test2@mail.com', 'password', 'User_Testicle2');
+('cshulleza@up.edu.ph', 'hulleza', 'Christian Jave');
 
 -- --------------------------------------------------------
 
@@ -164,12 +227,8 @@ CREATE TABLE `user_stock` (
 --
 
 INSERT INTO `user_stock` (`email`, `stock_id`) VALUES
-('jave@up.edu.ph', 10),
-('cshulleza@up.edu.ph', 11),
-('cshulleza@up.edu.ph', 14),
-('cshulleza@up.edu.ph', 15),
-('test1@mail.com', 16),
-('test2@mail.com', 17);
+('cshulleza@up.edu.ph', 23),
+('cshulleza@up.edu.ph', 24);
 
 -- --------------------------------------------------------
 
@@ -187,11 +246,7 @@ CREATE TABLE `user_tindahan` (
 --
 
 INSERT INTO `user_tindahan` (`tindahan_id`, `email`) VALUES
-(17, 'jave@up.edu.ph'),
-(19, 'cshulleza@up.edu.ph'),
-(21, 'a@email.com'),
-(28, 'a@email.com'),
-(32, 'test2@mail.com');
+(36, 'cshulleza@up.edu.ph');
 
 --
 -- Indexes for dumped tables
@@ -204,6 +259,13 @@ ALTER TABLE `invoice`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `invoiceitem_invoice`
+--
+ALTER TABLE `invoiceitem_invoice`
+  ADD KEY `invoice_item_id` (`invoice_item_id`),
+  ADD KEY `invoice_id` (`invoice_id`);
+
+--
 -- Indexes for table `invoice_item`
 --
 ALTER TABLE `invoice_item`
@@ -213,9 +275,15 @@ ALTER TABLE `invoice_item`
 -- Indexes for table `product`
 --
 ALTER TABLE `product`
-  ADD KEY `tindahan_id` (`tindahan_id`),
-  ADD KEY `product_id` (`stock_id`),
-  ADD KEY `fk_invoice_item` (`invoice_item_id`);
+  ADD PRIMARY KEY (`product_id`),
+  ADD KEY `fk_tindahan_id` (`tindahan_id`);
+
+--
+-- Indexes for table `product_invoiceitem`
+--
+ALTER TABLE `product_invoiceitem`
+  ADD KEY `product_id` (`product_id`),
+  ADD KEY `invoice_item_id` (`invoice_item_id`);
 
 --
 -- Indexes for table `stock`
@@ -228,6 +296,13 @@ ALTER TABLE `stock`
 --
 ALTER TABLE `tindahan`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tindahan_invoice`
+--
+ALTER TABLE `tindahan_invoice`
+  ADD KEY `invoice_id` (`invoice_id`),
+  ADD KEY `tindahan_id` (`tindahan_id`);
 
 --
 -- Indexes for table `user`
@@ -257,37 +332,62 @@ ALTER TABLE `user_tindahan`
 -- AUTO_INCREMENT for table `invoice`
 --
 ALTER TABLE `invoice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `invoice_item`
 --
 ALTER TABLE `invoice_item`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT for table `product`
+--
+ALTER TABLE `product`
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `stock`
 --
 ALTER TABLE `stock`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `tindahan`
 --
 ALTER TABLE `tindahan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- Constraints for dumped tables
 --
 
 --
+-- Constraints for table `invoiceitem_invoice`
+--
+ALTER TABLE `invoiceitem_invoice`
+  ADD CONSTRAINT `invoiceitem_invoice_ibfk_1` FOREIGN KEY (`invoice_item_id`) REFERENCES `invoice_item` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `invoiceitem_invoice_ibfk_2` FOREIGN KEY (`invoice_id`) REFERENCES `invoice` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `product`
 --
 ALTER TABLE `product`
-  ADD CONSTRAINT `fk_invoice_item` FOREIGN KEY (`invoice_item_id`) REFERENCES `invoice_item` (`id`),
-  ADD CONSTRAINT `product_ibfk_1` FOREIGN KEY (`tindahan_id`) REFERENCES `tindahan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `product_ibfk_2` FOREIGN KEY (`stock_id`) REFERENCES `stock` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_tindahan_id` FOREIGN KEY (`tindahan_id`) REFERENCES `tindahan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `product_invoiceitem`
+--
+ALTER TABLE `product_invoiceitem`
+  ADD CONSTRAINT `product_invoiceitem_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `product_invoiceitem_ibfk_2` FOREIGN KEY (`invoice_item_id`) REFERENCES `invoice_item` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `tindahan_invoice`
+--
+ALTER TABLE `tindahan_invoice`
+  ADD CONSTRAINT `tindahan_invoice_ibfk_1` FOREIGN KEY (`invoice_id`) REFERENCES `invoice` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `tindahan_invoice_ibfk_2` FOREIGN KEY (`tindahan_id`) REFERENCES `tindahan` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `user_stock`
