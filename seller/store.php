@@ -9,8 +9,6 @@ date_default_timezone_set('Asia/Manila');
 $_SESSION['store_id'] = $_GET['store_id']; 
 $_SESSION['store_view'] = isset($_GET['view']) ? $_GET['view']: 'summary'; 
 
-var_dump($stock_exist[$_SESSION['store_view']]);
-
 // -- data
 // --- tindahan data
 $store = $conn->query(
@@ -25,8 +23,6 @@ $products = $conn->query(
     FROM product p
     WHERE p.tindahan_id = ".$_SESSION['store_id'].""
 )->fetch_all(MYSQLI_ASSOC);
-var_dump($store);
-var_dump($products);
 
 $invoices = $conn->query(
     "SELECT *
@@ -154,6 +150,11 @@ $invoices = $conn->query(
             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             animation: slideUp 0.6s ease-out 0.2s both;
+        }
+
+        .nameDate h2 {
+            color: purple;
+
         }
 
         @keyframes slideUp {
@@ -464,10 +465,6 @@ $invoices = $conn->query(
         </header>
     
         <aside class="nav-tabs">
-            <div>
-                <h2><?php echo $store['name']?></h2>
-                <h2><?php echo date('F j, Y')?></h2>        
-            </div>
             <a href='?store_id=<?php echo $_SESSION['store_id']?>&view=summary' class="nav-tab <?php echo ($_SESSION['store_view'] == 'summary')? 'active':''; ?>">Summary</a>
             <a href='?store_id=<?php echo $_SESSION['store_id']?>&view=invoice' class="nav-tab <?php echo ($_SESSION['store_view'] == 'invoice')? 'active':''; ?>">Invoice</a>
             <a href='?store_id=<?php echo $_SESSION['store_id']?>&view=products' class="nav-tab <?php echo ($_SESSION['store_view'] == 'products')? 'active':''; ?>">Products</a>
