@@ -5,87 +5,135 @@ include '../../includes/functions.php';
 
 // -- starts and gets session data
 session_start();
-
 date_default_timezone_set('Asia/Manila');
-
-$date = date('F j, Y');
-
-var_dump($date);
-
-// -- add product form handling
-$quantity = $subtotal = $default_status = 0;
-
-$errors = [];
-
+$_SESSION['product_list'] = (isset($_GET['session']) && $_GET['session'] == 'new') ? []: $_SESSION['product_list'];
 $products = $conn->query(
     "SELECT *
-    FROM user u
-    JOIN user_stock us ON u.email = us.email
-    JOIN stock s ON us.stock_id = s.id
-    join product p on p.stock_id = s.id
-    WHERE u.email = '".$_SESSION['email']."'"
-)->fetch_all(MYSQLI_ASSOC); 
+    FROM tindahan t
+    JOIN product p ON t.id = p.tindahan_id 
+    WHERE t.id = ".$_SESSION['store_id'].""
+)->fetch_all(MYSQLI_ASSOC);
 
-$invoice = $conn->query(
-    "SELECT *
-    FROM invoice it
-    JOIN user_tindahan ut on ut.tindahan_id = it.id
-    WHERE ut.tindahan_id = '".$_SESSION['store_id']."'")->fetch_all(MYSQLI_ASSOC); 
+// -- add invoice form handling
+$buyer = $payment_type = $quantity = $status = "";
+$errors = [];
 do {
     // --- if wrong request or new start
     if (!($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_invoice']))) {
         break;
     }
 
-    // --- invoice input handling
-
-    if (empty($_POST["amount"])) {
-        $errors["amount"] = "Quantity is required";
+    // --- name user input handling
+    if (empty($_POST["buyer"])) {
+        $errors["buyer"] = "Name is required";
     } else {
-        $amount = sanitize($_POST['amount']);
+        $buyer = sanitize($_POST['buyer']);
     } 
-    
+
+    if (empty($_POST["payment_type"])) {
+        $errors["payment_type"] = "Payment Type is required";
+    } else {
+        $payment_type = sanitize($_POST["payment_type"]);
+    } 
+
     if (!empty($errors)) {
         break;
     }
 
     // --- user data handling
-    if ($invoice->num_rows >= 0) {
-        $errors["buyer"] = "Invoice not created.";
-        break;
+    foreach ($_POST['added_quantity'] as $quantity) {
+        if (!filter_var($quantity, FILTER_VALIDATE_INT)) {
+            $errors["added_quantity"] = "Quantity value/s are not valid";
+            break;
+        }
     }
-
-    $invoice->fetch_assoc();
-    if (!filter_var($quantity, FILTER_VALIDATE_INT)) {
-        $errors["quantity"] = "Input value is not valid";
-    } else {
-        $quantity = intval($quantity);
-        if ($quantity > $products['quantity']) {
-            $errors["quantity"] = "Quantity exceeds product quantity";
-        } 
-    }
-    if (!filter_var($amount, FILTER_VALIDATE_FLOAT)) {
-        $errors["subtotal"] = "Input value is not valid";
-    } else {
-        $amount = floatval($amount); 
-    }
-    
     if (!empty($errors)) {
         break;
     }
 
-    // --- perform add operation
-    $unit_price = $conn->query("SELECT unit_price
-                                FROM product
-                                join stock on stock.id = product.stock_id
-                                WHERE stock_id = '".$_SESSION['store_id']."'")
-                                ->fetch_assoc()['unit_price'];
-    $subtotal = $unit_price * $quantity;
+    for ($i = 0; $i < count($_POST['added_products']); $i++) {
+        $product_id = intval($_POST['added_products'][$i]);
+        $quantity = intval($_POST['added_quantity'][$i]);
+        
+        $curr_product = $conn->query("
+            SELECT *
+            FROM product p 
+            WHERE p.product_id = $product_id
+        ")->fetch_assoc();
 
+        if ($curr_product['quantity_sold'] < $quantity) {
+            $errors["added_quantity"] = "Quantity value/s exceed product quantity";
+            break;
+        }
+    }
+    if (!empty($errors)) {
+        break;
+    }
+
+    
+    // --- perform add operation
+    $date = date('Y-m-d'); // Better SQL-compatible date format
+
+    // Insert invoice
+    $conn->query("
+        INSERT INTO invoice(id, date, status, buyer, total_amount, payment_type)
+        VALUES (NULL, '$date', FALSE, '$buyer', 0.00, '$payment_type')
+    ");
+
+    $invoice_id = $conn->insert_id; // Save invoice ID for later use
+    $total = 0;
+    for ($i = 0; $i < count($_POST['added_products']); $i++) {
+        $product_id = intval($_POST['added_products'][$i]);
+        $quantity = intval($_POST['added_quantity'][$i]);
+            
+        // Fetch product details
+        $curr_product = $conn->query("
+            SELECT *
+            FROM product p 
+            WHERE p.product_id = $product_id
+        ")->fetch_assoc();
+
+        $unit_price = floatval($curr_product['unit_price']);
+        $subtotal_cost = $unit_price * $quantity;
+        $total += $subtotal_cost;
+
+        // Update product quantities 
+        $conn->query(
+            "UPDATE product
+            SET quantity_sold = quantity_sold - $quantity
+            WHERE product_id = $product_id;"
+        );    
+        
+        // Insert invoice item
+        $conn->query("
+            INSERT INTO invoice_item(id, subtotal, quantity, status)
+            VALUES (NULL, $subtotal_cost, $quantity, 0)
+        ");
+
+        $invoice_item_id = $conn->insert_id;
+
+        $conn->query("
+            INSERT INTO product_invoiceitem(product_id, invoice_item_id)
+            VALUES (".$curr_product['product_id'].", $invoice_item_id)
+        ");
+        // Link invoice item to invoice
+       $conn->query(
+        "INSERT INTO invoiceitem_invoice(invoice_item_id, invoice_id)
+            VALUES ($invoice_item_id, $invoice_id)
+        ");
+    }
+    // Add total
     $conn->query(
-        "INSERT INTO invoice(buyer, id, date, paid_status, amount) 
-        VALUES ($buyer, ".$invoice_item['id'].", $date, $default_status, $subtotal)"
-    );
+        "UPDATE invoice
+        SET total_amount = $total
+        WHERE id = $invoice_id
+    ");
+    $curr_store = $_SESSION['store_id']; 
+    $conn->query(
+        "INSERT INTO tindahan_invoice(tindahan_id, invoice_id)
+            VALUES ($curr_store, $invoice_id)
+        ");
+
     header("Location: ../store.php?store_id=".$_SESSION['store_id']."&view=invoice");
 } while (0);
 ?>
@@ -97,85 +145,92 @@ do {
         input {
             display: block;
         }
-        #product-attribute-title, .stock-item {
+        #product-attribute-title {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr; 
+        }
+        .product-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr; 
+            
         }
     </style>
 </head>
 <body>
-    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']).'?store_id='. $_SESSION['store_id'];?>">  
+    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'])?>">
         <div>
-            <label>Add Invoice</label>
-        </div>  
-        <div>
-            <label>Name</label>
-            <input type="text" name="name">
+            <label>Customer Name</label>
+            <input type="text" name="buyer" value="<?php echo htmlspecialchars($buyer);?>">
             <?php if (isset($errors["buyer"])): ?>
                 <div ><?php echo $errors["buyer"]; ?></div>
             <?php endif; ?>
-        </div>  
-        <div >
-            <label>Product Name</label>
-            <div id='see-stock'>See Stock</div>
-            <input type="text" id="product-input" name="name">
-            <?php if (isset($errors["name"])): ?>
-                <div ><?php echo $errors["name"]; ?></div>
-            <?php endif; ?>
-            <div id='product-search'>
-                <div id='product-attribute-title'>
-                    <div>Name</div>
-                    <div>Quantity</div>
-                    <div>Price</div>
-                    <div>Source</div>
-                </div>
-                <div id='all-products'>   
-                <?php foreach($products as $product):?> 
-                    <div class='stock-item'>
-                        <div><?php echo $product['name']?></div>
-                        <div><?php echo $product['quantity_sold']?></div>
-                        <div><?php echo $product['unit_price']?></div>
-                        <div><?php echo $product['source']?></div>
-                    </div>
-                <?php endforeach;?>
-                </div>
-            </div>
         </div>
         <div>
-            <label>Quantity</label>
-            <input type="text" name="quantity">
-            <?php if (isset($errors["quantity"])): ?>
-                <div ><?php echo $errors["quantity"]; ?></div>
+            <label>Payment Type</label>
+            <input type="radio" name="payment_type" value="Cash" <?php echo ($payment_type == 'Cash') ? 'checked' : ''; ?>> Cash<br>
+            <input type="radio" name="payment_type" value="GCash" <?php echo ($payment_type == 'GCash') ? 'checked' : ''; ?>> GCash<br>
+            <input type="radio" name="payment_type" value="Paymaya" <?php echo ($payment_type == 'Paymaya') ? 'checked' : ''; ?>> Paymaya<br>
+
+            <?php if (isset($errors["payment_type"])): ?>
+                <div ><?php echo $errors["payment_type"]; ?></div>
             <?php endif; ?>
         </div>
-        <button type="submit" name="add_invoice">Add Invoice Item</button>
+        <div>
+            <label>Product</label>
+            <?php foreach($products as $index => $product): ?>
+                <div class='product-item'>
+                    <div><?php echo $product['name']?></div>
+                    <div><?php echo $product['unit_price']?></div>
+                    <div><?php echo $product['quantity_sold']?></div>
+                    <div>
+                        <input 
+                            type="checkbox" 
+                            name="added_products[]" 
+                            value="<?php echo $product['product_id']; ?>" 
+                            class="product-checkbox" 
+                            data-index="<?php echo $index; ?>"
+                        >
+                    </div>
+                    <div>
+                        <input 
+                            type="text" 
+                            name="added_quantity[]" 
+                            class="product-quantity" 
+                            data-index="<?php echo $index; ?>" 
+                            disabled
+                        >
+                    </div>
+                </div>               
+            <?php endforeach; ?>
+            <?php if (isset($errors["added_quantity"])): ?>
+                <div ><?php echo $errors["added_quantity"]; ?></div>
+            <?php endif; ?>
+
+        </div>
+        <button type="submit" name="add_invoice">Add Invoice</button>
     </form>
     <a href="../store.php?store_id=<?php echo $_SESSION['store_id']?>&view=invoice">
-        <button>Back</button>
+        <button >Back</button>
     </a>
-    <script>
-        // For stock display
-        const stockVisibilityToggler = document.querySelector('#see-stock'); 
-        const stockList = document.querySelector('#product-search'); 
-        stockVisibilityToggler.addEventListener('click', () => {
-            if (stockList.style.display === 'none') {
-                stockList.style.display = 'block';
-            } else {
-                stockList.style.display = 'none';
-            }
-        });
 
-        // For stock filter
-        const searchInput = document.querySelector('#product-input');
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.toLowerCase();
-            const rows = document.querySelectorAll('.stock-item');
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
+    <script>
+        
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkboxes = document.querySelectorAll('.product-checkbox');
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', function() {
+                const index = this.getAttribute('data-index');
+                const quantityInput = document.querySelector(`.product-quantity[data-index='${index}']`);
+
+                if (this.checked) {
+                    quantityInput.disabled = false;
+                } else {
+                    quantityInput.disabled = true;
+                    quantityInput.value = ''; // Optional: clear value if unchecked
+                }
             });
         });
-
-    </script>
+    });
+</script>
 </body>
 </html>

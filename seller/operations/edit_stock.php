@@ -5,11 +5,13 @@ include '../../includes/functions.php';
 
 // -- starts and gets session data
 session_start();
-
+$name = $conn->query(
+    "SELECT * 
+    FROM stock
+    WHERE id = ".$_GET['stock_id']."")->fetch_assoc()['name']; 
 // -- edit stock form handling
-$name = $quantity = $unit = $price = $source = "";
+$quantity = $unit = $price = $source = "";
 $errors = [];
-
 do {
     // --- if wrong request or new start
     if (!($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_stock']))) {
@@ -27,12 +29,6 @@ do {
     }
 
     // --- name user input handling
-    if (empty($_POST["name"])) {
-        $errors["name"] = "Name is required";
-    } else {
-        $name = sanitize($_POST['name']);
-    } 
-
     if (empty($_POST["quantity"])) {
         $errors["quantity"] = "Quantity is required";
     } else {
@@ -62,16 +58,6 @@ do {
     }
 
     // --- user data handling
-    $name_exists = $conn->query(
-        "SELECT *
-        FROM user_stock us
-        JOIN stock s ON us.stock_id = s.id
-        WHERE us.email = '".$_SESSION['email']."' AND s.name = '$name'");
-    if ($name_exists->num_rows > 0) {
-        $errors["name"] = "Name is already in stock";
-    }   
-
-
     if (!filter_var($quantity, FILTER_VALIDATE_INT)) {
         $errors["quantity"] = "Input value is not valid";
     } else {
@@ -91,8 +77,7 @@ do {
     // --- perform edit operation
      $conn->query(
         "UPDATE stock
-        SET name = '$name',
-            price = '$price',
+        SET price = '$price',
             quantity = '$quantity',
             unit = '$unit',
             source = '$source'
@@ -113,12 +98,8 @@ do {
 </head>
 <body>
     <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])."?stock_id=".$_GET['stock_id'];?>">
-        <div >
-            <label>Stock Name</label>
-            <input type="text" name="name"  value="<?php echo htmlspecialchars($name);?>">
-            <?php if (isset($errors["name"])): ?>
-                <div ><?php echo $errors["name"]; ?></div>
-            <?php endif; ?>
+        <div>
+            <label><?php echo $name; ?></label>
         </div>
         <div >
             <label>Quantity</label>

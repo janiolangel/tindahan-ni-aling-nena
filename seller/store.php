@@ -15,27 +15,24 @@ $store = $conn->query(
     "SELECT * 
     FROM tindahan 
     WHERE id = ".$_SESSION['store_id'].""
-)->fetch_assoc(); 
+)->fetch_assoc();   
 
 // --- product data
 $products = $conn->query(
     "SELECT *
     FROM product p
-    JOIN stock s ON s.id = p.stock_id
     WHERE p.tindahan_id = ".$_SESSION['store_id'].""
 )->fetch_all(MYSQLI_ASSOC);
+var_dump($store);
 var_dump($products);
 
 $invoices = $conn->query(
     "SELECT *
-    FROM invoice_item it
-    JOIN product p on p.stock_id = it.id
-    WHERE p.stock_id = ".$_SESSION['store_id'].""
+    FROM invoice i
+    JOIN tindahan_invoice ti on i.id = ti.invoice_id
+    WHERE ti.tindahan_id = ".$_SESSION['store_id'].""
 )->fetch_all(MYSQLI_ASSOC);
-
 ?>
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -54,7 +51,6 @@ $invoices = $conn->query(
             <!-- <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiM1ZTFhMTIiLz48dGV4dCB4PSIyMCIgeT0iMjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPkxOPC90ZXh0Pjwvc3ZnPg==" alt="Logo" class="logo"> -->
             <div>TINDAHAN NI<br>ALING NENA</div>
         </div>
-        <div>Current User: <span class="user-name"><?php echo htmlspecialchars($_SESSION["username"]); ?></span></div>
     </header>
 
     <div>
@@ -72,7 +68,7 @@ $invoices = $conn->query(
     
     <?php if ($_SESSION['store_view'] == 'summary'): ?>
         <p>Current Most-Selling Item: TO BE MADE</p>
-        <p>Current Income: TO BE MADE</p>
+        <p>Current Income: <?php echo $store['revenue'] - $store['expense'];?></p>
     <?php elseif ($_SESSION['store_view'] == 'products'): ?>
         <aside>
             <?php foreach ($products as $product): ?>
@@ -81,27 +77,29 @@ $invoices = $conn->query(
                     <?php echo htmlspecialchars($product['unit_price']); ?>
                     <?php echo htmlspecialchars($product['quantity_sold']); ?>
                 </a>
-                <a href="operations/edit_product.php?stock_id=<?php echo $product['stock_id'];?>">Edit</a>
-                <a href="operations/delete_product.php?stock_id=<?php echo $product['stock_id'];?>">Delete</a>
+                <a href="operations/edit_product.php?product_id=<?php echo $product['product_id'];?>">Edit</a>
+                <a href="operations/delete_product.php?product_id=<?php echo $product['product_id'];?>">Delete</a>
                 <br>
             <?php endforeach;?>
-            <a href="operations/add_product.php?store_id=<?php echo $_SESSION['store_id']?>" class="add-product">Add Product +</a>
+            <a href="operations/add_product.php?store_id=<?php echo $_SESSION['store_id']?>">Add Product +</a>
         </aside>
     <?php elseif ($_SESSION['store_view'] == 'invoice'): ?>
         <label>Invoice List</label>
         <aside>
-            <?php foreach ($invoices as $invoice): ?>
-                <a class="invoice-desc" style="text-decoration: none; color: inherit;">
-                    <?php echo htmlspecialchars($invoice['name']); ?>
+            <a href="operations/add_invoice.php?store_id=<?php echo $_SESSION['store_id']?>&session=new">Add Invoice +</a>
+        </aside>
+        <?php foreach ($invoices as $invoice): ?>
+            <div class="invoice-container">
+                <a href="operations/edit_invoice.php?invoice_id=<?php echo $invoice['id']?>" class="invoice-desc" style="text-decoration: none; color: inherit;">
+                    <?php echo htmlspecialchars($invoice['buyer']); ?>
+                    <?php echo htmlspecialchars($invoice['total_amount']); ?>
+                    <?php echo htmlspecialchars($invoice['date']); ?>
+                    <?php echo htmlspecialchars($invoice['payment_type']); ?>
                     <?php echo htmlspecialchars($invoice['status']); ?>
-                    <?php echo htmlspecialchars($invoice['quantity']); ?>
-                    <?php echo htmlspecialchars($invoice['subtotal']); ?>
-                </a>
-                <a href="operations/edit_invoice.php?stock_id=<?php echo $product['stock_id'];?>">Edit</a>
-                <a href="operations/delete_invoice.php?stock_id=<?php echo $product['stock_id'];?>">Delete</a>
-                <br>
-            <?php endforeach;?>
-            <a href="operations/add_invoice.php?store_id=<?php echo $_SESSION['store_id']?>" class="add-product">Add Invoice +</a>
+                </a>         
+                <a href="operations/delete_invoice.php?invoice_id=<?php echo $invoice['id']; ?>">Delete</a>
+            </div>
+        <?php endforeach; ?>
         </aside>
     <?php endif;?>
     <div>

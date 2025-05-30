@@ -5,19 +5,17 @@ include '../../includes/functions.php';
 
 // -- starts and gets session data
 session_start();
-
+$stocks = $conn->query(
+    "SELECT *
+    FROM user u
+    JOIN user_stock us ON u.email = us.email
+    JOIN stock s ON us.stock_id = s.id 
+    WHERE u.email = '".$_SESSION['email']."'"
+)->fetch_all(MYSQLI_ASSOC);
 // -- add product form handling
 $name = $quantity = $price = "";
 $errors = [];
-$stocks = $conn->query(
-    "SELECT s.name, s.quantity, s.price, s.source
-    FROM user u
-    JOIN user_stock us ON u.email = us.email
-    JOIN stock s ON us.stock_id = s.id
-    WHERE u.email = '".$_SESSION['email']."'"
-)->fetch_all(MYSQLI_ASSOC); 
-var_dump($stocks);
-var_dump($_SESSION['store_id']);
+
 do {
     // --- if wrong request or new start
     if (!($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_product']))) {
@@ -54,19 +52,9 @@ do {
         JOIN user_stock us ON us.stock_id = s.id
         WHERE us.email = '" . $_SESSION['email'] . "' AND s.name = '$name'"
     );
-    $product_exists = $conn->query(
-        "SELECT *
-        FROM product p
-        JOIN stock s ON p.stock_id = s.id 
-        JOIN tindahan t ON t.id = p.tindahan_id
-        WHERE t.id ='".$_SESSION['store_id']."' and s.name = '$name'"
-    );
     if ($stock_exists->num_rows == 0) {
         $errors["name"] = "Product is not in stock";
         break;
-    }
-    if ($product_exists->num_rows > 0) {
-        $errors["name"] = "Product is already in store";     
     }
 
     $stock = $stock_exists->fetch_assoc();
@@ -89,10 +77,35 @@ do {
     }
 
     // --- perform add operation
-    $conn->query(
-        "INSERT INTO product(tindahan_id, stock_id, quantity_sold, unit_price) 
-        VALUES (".$_SESSION['store_id'].", ".$stock['id'].", $quantity, $price)"
+    $product_exists = $conn->query(
+        "SELECT *
+        FROM product p
+        JOIN tindahan t ON t.id = p.tindahan_id
+        WHERE t.id ='".$_SESSION['store_id']."' and p.name = '$name'"
     );
+    if ($product_exists->num_rows > 0) {
+        $product = $product_exists->fetch_assoc();
+        $conn->query(
+            "UPDATE product
+            SET quantity_sold = quantity_sold + $quantity, unit_price = $price
+            WHERE name = '$name';"  
+        );
+    } else {
+        $conn->query(   
+            "INSERT INTO product(tindahan_id, quantity_sold, unit_price, name, source, unit) 
+            VALUES (".$_SESSION['store_id'].", $quantity, $price, '".$stock['name']."', '".$stock['source']."', '".$stock['unit']."')"
+        );
+    }
+    $conn->query(
+        "UPDATE stock
+        SET quantity = quantity - $quantity
+        WHERE name = '$name';"  
+    );
+    $conn->query(
+        "UPDATE tindahan
+        SET expense = expense + $quantity * ".$stock['price']."
+        WHERE id = ".$_GET['store_id']."");
+        
     header("Location: ../store.php?store_id=".$_SESSION['store_id']."&view=products");
 } while (0);
 ?>
@@ -112,10 +125,10 @@ do {
 </head>
 <body>
         <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']).'?store_id='. $_SESSION['store_id'];?>">
-        <div >
+        <div>
             <label>Product Name</label>
             <div id='see-stock'>See Stock</div>
-            <input type="text" id="product-input" name="name"  value="<?php echo htmlspecialchars($name);?>">
+            <input type="text" id="product-input" name="name" value="<?php echo htmlspecialchars($name);?>">
             <?php if (isset($errors["name"])): ?>
                 <div ><?php echo $errors["name"]; ?></div>
             <?php endif; ?>
@@ -139,7 +152,7 @@ do {
             </div>
         </div>
 
-        <div >
+        <div>
             <label>Quantity</label>
             <input type="text" name="quantity"  value="<?php echo htmlspecialchars($quantity);?>">
             <?php if (isset($errors["quantity"])): ?>
@@ -155,7 +168,7 @@ do {
             <?php endif; ?>
         </div>
         
-        <button type="submit" name="add_product" >Add Product</button>
+        <button type="submit" name="add_product">Add Product</button>
     </form>
     <a href="../store.php?store_id=<?php echo $_SESSION['store_id']?>&view=products">
         <button >Back</button>

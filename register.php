@@ -86,6 +86,12 @@ do {
         input {
             display: block;
         }
+        * {
+            margin: 0px;
+            padding: 0px;
+            box-sizing: 0px;
+        }
+        
     </style>
 </head>
 <body>

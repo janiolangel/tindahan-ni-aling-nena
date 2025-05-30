@@ -46,6 +46,19 @@ do {
 <html>
 <head>
     <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+        body * {
+            border: solid 1px red;
+        }
+        form {
+            width: 600px;
+        }
+
+
         input {
             display: block;
         }
@@ -59,6 +72,9 @@ do {
     </style>
 </head>
 <body>
+    <header>
+        Tindahan ni Aling Nena
+    </header>
     <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>">
         <?php if (isset($error_message)): ?>
             <div><?php echo $error_message;?></div>

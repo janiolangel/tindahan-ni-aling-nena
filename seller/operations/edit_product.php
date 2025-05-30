@@ -8,14 +8,10 @@ session_start();
 
 // -- edit form handling
 $quantity = $price = "";
-$stock = $conn->query(
-    "SELECT * 
-    FROM stock
-    WHERE id = ".$_GET['stock_id']."")->fetch_assoc();
 $product = $conn->query(
     "SELECT * 
     FROM product
-    WHERE stock_id = ".$_GET['stock_id']."")->fetch_assoc();
+    WHERE product_id = ".$_GET['product_id']."")->fetch_assoc();
 $errors = [];
 do {
     // --- if wrong request or new start
@@ -26,12 +22,6 @@ do {
     }
 
     // --- name user input handling
-    if (empty($_POST["quantity"])) {
-        $errors["quantity"] = "Quantity is required";
-    } else {
-        $quantity = sanitize($_POST['quantity']);
-    } 
-    
     if (empty($_POST["price"])) {
         $errors["price"] = "Price is required";
     } else {
@@ -43,14 +33,6 @@ do {
     }
 
     // --- user data handling
-    if (!filter_var($quantity, FILTER_VALIDATE_INT)) {
-        $errors["quantity"] = "Input value is not valid";
-    } else {
-        $quantity = intval($quantity);
-        if ($quantity > $stock['quantity']) {
-            $errors["quantity"] = "Quantity exceeds stock quantity";
-        } 
-    }
     if (!filter_var($price, FILTER_VALIDATE_FLOAT)) {
         $errors["price"] = "Input value is not valid";
     } else {
@@ -61,15 +43,13 @@ do {
         break;
     }
 
-    // --- perform add operation
-    var_dump($_GET['stock_id']);
-    var_dump($conn->query(
+    // --- perform edit operation
+   $conn->query(
         "UPDATE product
-            SET unit_price = $price,
-                quantity_sold = $quantity
-            WHERE stock_id = ".$_GET['stock_id'].";"    
-        )
-    );
+            SET unit_price = $price
+            WHERE product_id = ".$_GET['product_id'].";"    
+        );
+
     header("Location: ../store.php?store_id=".$_SESSION['store_id']."&view=products");
 } while (0);
 ?>
@@ -88,17 +68,9 @@ do {
     </style>
 </head>
 <body>
-    <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])."?stock_id=".$_GET['stock_id'];?>">
+    <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])."?product_id=".$_GET['product_id'];?>">
         <div class="form-group">
-            <label>Product Name: <?php echo $stock['name']?></label>
-        </div>
-
-        <div class="form-group">
-            <label>Quantity</label>
-            <input type="text" name="quantity" class="form-control" value="<?php echo htmlspecialchars($quantity);?>">
-            <?php if (isset($errors["quantity"])): ?>
-                <div class="error-text"><?php echo $errors["quantity"]; ?></div>
-            <?php endif; ?>
+            <label>Product Name: <?php echo $product['name']?></label>
         </div>
 
         <div class="form-group">
@@ -109,7 +81,7 @@ do {
             <?php endif; ?>
         </div>
         
-        <button type="submit" name="edit_product" class="btn">Add Product</button>
+        <button type="submit" name="edit_product" class="btn">Edit Product</button>
     </form>
     <a href="../store.php?store_id=<?php echo $_SESSION['store_id']?>&view=products">
         <button class="btn">Back</button>

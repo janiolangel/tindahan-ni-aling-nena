@@ -70,6 +70,7 @@ $stocks = $conn->query(
                 <?php echo htmlspecialchars($store['name']); ?>
                 <?php echo htmlspecialchars($store['address']); ?>
             </a>
+            <a href="operations/edit_store.php?store_id=<?php echo $store['id'];?>">Edit</a>
             <a href="operations/delete_store.php?store_id=<?php echo $store['id'];?>">Delete</a>
         </div>
         <?php endforeach; ?>

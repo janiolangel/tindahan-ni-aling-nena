@@ -43,8 +43,8 @@ do {
 
     // --- perform add operation
     $conn->query(
-        "INSERT INTO tindahan (id, name, address) 
-        VALUES (NULL, '$name', '$address')"
+        "INSERT INTO tindahan (id, name, address, expense, revenue) 
+        VALUES (NULL, '$name', '$address', 0, 0)"
     );
     $last_id = $conn->insert_id;
     $email = $_SESSION["email"]; 
