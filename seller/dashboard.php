@@ -31,6 +31,7 @@ $stocks = $conn->query(
 )->fetch_all(MYSQLI_ASSOC);
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -472,45 +473,85 @@ $stocks = $conn->query(
             </a>
         </nav>
 
-    <div class="search-container">
-        <input type="text" class="search-input" placeholder="Search">
-    </div>
-    
-    <?php if ($_SESSION['dashboard_view'] == "store"):?>
-    <div>
-        <?php foreach ($stores as $store): ?>
-        <div class="store-item">
-            <a href="store.php?store_id=<?php echo $store['id']; ?>" style="text-decoration: none; color: inherit;">
-                <?php echo htmlspecialchars($store['name']); ?>
-                <?php echo htmlspecialchars($store['address']); ?>
-            </a>
-            <a href="operations/edit_store.php?store_id=<?php echo $store['id'];?>">Edit</a>
-            <a href="operations/delete_store.php?store_id=<?php echo $store['id'];?>">Delete</a>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="🔍 Search <?php echo ($_SESSION['dashboard_view'] == 'store') ? 'stores' : 'stocks'; ?>...">
         </div>
-        <?php endforeach; ?>
-        <aside>
-            <a href='operations/add_store.php?'>Add Store +</a>
-            <a href="../logout.php">Log Out</a>
-        </aside>
-    </div>
 
-    <?php elseif ($_SESSION['dashboard_view'] == "stock"):?>        
-        <form action='operations/delete_stock.php' method='post'>
-            <div>
-            <?php foreach ($stocks as $stock): ?>
-                <div class="stock-item">
-                    <a>
-                        <?php echo htmlspecialchars($stock['name']); ?>
-                        <?php echo htmlspecialchars($stock['price']); ?>
-                        <?php echo htmlspecialchars($stock['source']); ?>
-                    </a>
-                    <a href="operations/edit_stock.php?stock_id=<?php echo $stock['id'];?>">Edit</a>
-                    <input type="checkbox" name="deleted_stocks[]" value="<?php echo $stock['id'];?>" style="display: <?php echo ($delete_stock_enabled)?'inline-block': 'none'?>">
-                </div>
-            <?php endforeach; ?>
-            </div>
-            <aside>
-                <a href='operations/add_stock.php?'>Add Stock +</a>
+        <div class="content-area">
+            <?php if ($_SESSION['dashboard_view'] == "store"): ?>
+                <?php if (empty($stores)): ?>
+                    <div class="empty-state">
+                        <div class="empty-icon">🏪</div>
+                        <h3>No stores found</h3>
+                        <p>Get started by adding your first store!</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($stores as $store): ?>
+                        <div class="store-item item-card">
+                            <div class="item-info">
+                                <div class="item-title"><?php echo htmlspecialchars($store['name']); ?></div>
+                                <div class="item-subtitle">📍 <?php echo htmlspecialchars($store['address']); ?></div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="store.php?store_id=<?php echo $store['id']; ?>" class="btn btn-primary">
+                                    👁️ View
+                                </a>
+                                <a href="operations/delete_store.php?store_id=<?php echo $store['id'];?>" class="btn btn-delete">
+                                    🗑️ Delete
+                                </a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+
+            <?php elseif ($_SESSION['dashboard_view'] == "stock"): ?>
+                <form action='operations/delete_stock.php' method='post'>
+                    <?php if (empty($stocks)): ?>
+                        <div class="empty-state">
+                            <div class="empty-icon">📦</div>
+                            <h3>No stocks found</h3>
+                            <p>Add your first stock item to get started!</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($stocks as $stock): ?>
+                            <div class="stock-item item-card <?php echo $delete_stock_enabled ? 'delete-mode' : ''; ?>">
+                                <div class="item-info">
+                                    <div class="item-title"><?php echo htmlspecialchars($stock['name']); ?></div>
+                                    <div class="stock-details">
+                                        <div class="stock-detail">
+                                            <div class="stock-detail-label">Price</div>
+                                            <div class="stock-detail-value">₱<?php echo number_format($stock['price'], 2); ?></div>
+                                        </div>
+                                        <div class="stock-detail">
+                                            <div class="stock-detail-label">Source</div>
+                                            <div class="stock-detail-value"><?php echo htmlspecialchars($stock['source']); ?></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item-actions">
+                                    <a href="operations/edit_stock.php?stock_id=<?php echo $stock['id'];?>" class="btn btn-edit">
+                                        ✏️ Edit
+                                    </a>
+                                    <?php if ($delete_stock_enabled): ?>
+                                        <input type="checkbox" name="deleted_stocks[]" value="<?php echo $stock['id'];?>" class="checkbox-item">
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </form>
+            <?php endif; ?>
+        </div>
+
+        <aside class="sidebar">
+            <?php if ($_SESSION['dashboard_view'] == "store"): ?>
+                <a href='operations/add_store.php' class="btn">
+                    ➕ Add Store
+                </a>
+            <?php else: ?>
+                <a href='operations/add_stock.php' class="btn">
+                    ➕ Add Stock
+                </a>
                 <?php if ($delete_stock_enabled): ?>
                     <input type='submit' value='✅ Confirm Delete' class="btn btn-delete" form="delete-form">
                     <a href='?view=stock' class="btn">
@@ -528,104 +569,5 @@ $stocks = $conn->query(
         </aside>
     </div>
 
-    <script>
-        // Enhanced search functionality
-        const searchInput = document.querySelector('.search-input');
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.toLowerCase();
-            const items = document.querySelectorAll('.<?php echo $_SESSION['dashboard_view']?>-item');
-            
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                const shouldShow = text.includes(searchTerm);
-                
-                if (shouldShow) {
-                    item.style.display = '';
-                    item.style.animation = 'slideUp 0.3s ease-out';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            
-            // Show empty state if no results
-            const visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
-            const emptyState = document.querySelector('.empty-state');
-            
-            if (visibleItems.length === 0 && searchTerm && !emptyState) {
-                const contentArea = document.querySelector('.content-area');
-                const noResults = document.createElement('div');
-                noResults.className = 'empty-state search-empty';
-                noResults.innerHTML = `
-                    <div class="empty-icon">🔍</div>
-                    <h3>No results found</h3>
-                    <p>Try searching with different keywords</p>
-                `;
-                contentArea.appendChild(noResults);
-            } else if (visibleItems.length > 0) {
-                const searchEmpty = document.querySelector('.search-empty');
-                if (searchEmpty) searchEmpty.remove();
-            }
-        });
-
-        // Add smooth hover animations
-        document.querySelectorAll('.item-card').forEach((card, index) => {
-            card.style.animationDelay = `${index * 0.1}s`;
-            
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-4px) scale(1.02)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) scale(1)';
-            });
-        });
-
-        // Add click animation to buttons
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                // Create ripple effect
-                const ripple = document.createElement('span');
-                ripple.style.cssText = `
-                    position: absolute;
-                    border-radius: 50%;
-                    background: rgba(255, 255, 255, 0.6);
-                    transform: scale(0);
-                    animation: ripple 0.6s linear;
-                    pointer-events: none;
-                `;
-                
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                ripple.style.width = ripple.style.height = size + 'px';
-                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-                
-                this.style.position = 'relative';
-                this.style.overflow = 'hidden';
-                this.appendChild(ripple);
-                
-                setTimeout(() => ripple.remove(), 600);
-            });
-        });
-
-        // Add CSS for ripple animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes ripple {
-                to {
-                    transform: scale(4);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Auto-focus search when typing
-        document.addEventListener('keydown', function(e) {
-            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && document.activeElement !== searchInput) {
-                searchInput.focus();
-            }
-        });
-    </script>
 </body>
 </html>
